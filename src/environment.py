@@ -32,6 +32,7 @@ class GetReward(Wrapper):
         
 
     def step(self, action):
+        self.env.render()
         state, reward, done, info = self.env.step(action)
         state = process_frame(state)
         

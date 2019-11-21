@@ -6,3 +6,7 @@
 
 # folders
 _pycache_/
+data/
+pretrained/
+trained_models/
+summary/

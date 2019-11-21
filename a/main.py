@@ -1,5 +1,5 @@
 import sys  
-sys.path.append("/home/luke/Documents/Metal-Mario")
+sys.path.append("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project")
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Normal
@@ -40,4 +40,4 @@ workers = []
 # for rank in range(1):
 #     worker = mp.Process(target = train, args = (rank, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True))
 
-train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,False)
+train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True)

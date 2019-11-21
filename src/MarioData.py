@@ -12,10 +12,15 @@ from torch.utils.data import DataLoader, Dataset
 import torchvision
 from torchvision import transforms, utils
 import cv2
+import os
 class DatasetMario(Dataset):
     def __init__(self, file_path, csv_name, transform_in=None):
-        self.data = pd.read_csv(file_path+"/"+csv_name)
-        self._path = file_path+"/"
+        #print("file path: {}".format(file_path))
+        self.data = pd.read_csv(csv_name) # file_path+"/"+csv_name
+        self._path = file_path
+        self._path = self._path.replace("/","")
+        #print(" path: {}".format(self._path))
+        #print("file path: {}".format(file_path))
         self.transform_in = transform_in
 
     def __len__(self):
@@ -23,8 +28,16 @@ class DatasetMario(Dataset):
 
     def __getitem__(self, index):
         # Load state and image from Mario FCEUX (after a dataset has been created with the Lua script and FM2)
+        self.data.iloc[index,0]= self.data.iloc[index,0].replace("/","\\")
+        self.data.iloc[index,0]=self.data.iloc[index,0].replace(".","",1)
         image_file = self._path + self.data.iloc[index, 0]#.values.astype(np.uint8).reshape((1, 28, 28))
+        #print("data iloc: {}".format(self.data.iloc[index, 0]))
+        self.data.iloc[index, 1] = self.data.iloc[index, 1].replace("/","\\")
+        self.data.iloc[index, 1] = self.data.iloc[index, 1].replace(".","",1)
+
         state_fn = self._path + self.data.iloc[index, 1]
+
+        #print("imagefile {}".format(image_file))
 
         # Get image
         img_rgba = Image.open(image_file)

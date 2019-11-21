@@ -1,3 +1,4 @@
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -8,7 +9,7 @@ import time
 from torch.autograd import Variable
 from torchvision.transforms import transforms
 from torchvision import utils
-import MarioData as md
+import src.MarioData as md
 from torch.utils.data import DataLoader
 import os
 from torch.utils.data.sampler import SubsetRandomSampler
@@ -107,7 +108,8 @@ def trainNet(net,train_loader,val_loader,n_epochs,learning_rate,device):
                 
                 current_step_per = int(100 * (i+1) /n_batches)
                 writer.add_scalar("Cae train loss",running_loss/print_every,current_step_per)
-                print("Epoch [{}/{}] {:d}%, Step[{}/{}],Loss: {:.4f},Accuracy: {:.2f}% took: {:.2f}s").format(epoch+1,n_epochs,current_step_per,i+1,len(train_loader,running_loss/print_every,0,time.time() -start_time))
+                print("Epoch [{}/{}] {:d}%, Step[{}/{}],Loss: {:.4f},Accuracy: {:.2f}% took: {:.2f}s"
+                .format(epoch + 1,n_epochs,current_step_per,i+1,len(train_loader),running_loss/print_every,0,time.time() -start_time))
 
                 t_losses.append(running_loss / print_every)
 
@@ -152,7 +154,7 @@ def trainNet(net,train_loader,val_loader,n_epochs,learning_rate,device):
 def show_images(images):
     
     grid = utils.make_grid(images)
-    plt.imshow(img_as_float(grid.numpy().transpose((1,2,0))))
+    plt.imshow(img_as_float(grid.cpu().numpy().transpose((1,2,0))))
     plt.axis('off')
     plt.ioff()
     plt.show()
@@ -183,9 +185,9 @@ def testNet(net, test_loader, device):
             final_inputs = cat_inputs2
             final_outputs = outputs
         
-        show_images(cat_inputs1)
+            show_images(cat_inputs1)
 
-        show_images(final_outputs)
+            show_images(final_outputs)
 
 def trainCAE(save_weights, save_model):
 
@@ -195,7 +197,7 @@ def trainCAE(save_weights, save_model):
         transforms.ToTensor()
     ])
 
-    dataset = md.DatasetMario(file_path="./",csv_name="allitems.csv",transform_in = transform2apply)
+    dataset = md.DatasetMario(os.getcwd()+"/",csv_name="allitems.csv",transform_in = transform2apply)
 
     val_split =0.2
     shuffle = True
@@ -228,11 +230,18 @@ def trainCAE(save_weights, save_model):
     test_loader = DataLoader(dataset,batch_size =4, sampler = test_samp, num_workers =3, drop_last = True)
 
     device = torch.device("cuda"if (torch.cuda.is_available())else "cpu")
-    CAE_model = CAE.to(device)
+    print("cuda available: {}".format(torch.cuda.is_available()))
+    CAE_model = CAE().to(device)
     print("Training model")
     print(CAE_model)
 
-    trainNet(CAE_model, train_loader,val_loader,n_epochs=1,learning_rate=0.001, device = device)
+
+    if not os.path.exists(save_weights) and not os.path.exists(save_model):
+        trainNet(CAE_model, train_loader,val_loader,n_epochs=1,learning_rate=0.001, device = device)
+        torch.save(CAE_model.state_dict,save_weights)
+        torch.save(CAE_model,save_model)
+
+    #trainNet(CAE_model, train_loader,val_loader,n_epochs=1,learning_rate=0.001, device = device)
     testNet(CAE_model, test_loader,device =device)
 
     print("done!")
