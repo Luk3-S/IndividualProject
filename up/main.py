@@ -1,5 +1,5 @@
 import sys  
-sys.path.append("/home/luke/Documents/Metal-Mario")
+sys.path.append("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project")
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Normal
@@ -15,7 +15,7 @@ from train import train
 torch.manual_seed(123)
 
 mp = _mp.get_context('spawn')
-button = 'up'
+button = 'UP'
 env, num_states, num_actions = create_env(1,1,button)
 
 print("num states: {}".format(num_states))

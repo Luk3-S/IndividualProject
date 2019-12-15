@@ -1,6 +1,7 @@
 
 import sys  
-sys.path.append("/home/luke/Documents/Metal-Mario")
+sys.path.append("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project")
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -19,7 +20,7 @@ import timeit
 
 def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser,save=True,new_stage=False):
 
-    button = 'up'
+    button = 'UP'
     if save:
         start_time = timeit.default_timer()
     env, num_states,num_actions = create_env(1,1,button)

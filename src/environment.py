@@ -78,6 +78,7 @@ class GetFrame(Wrapper):
 
 
 def create_env(world,stage,button):
+    print("b:",button)
     env_name = "SuperMarioBros-1-1-v0"
     env= gym_super_mario_bros.make(env_name)
     env = JoypadSpace(env,button)

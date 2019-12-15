@@ -1,5 +1,5 @@
 import sys  
-sys.path.append("/home/luke/Documents/Metal-Mario")
+sys.path.append("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project")
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Normal
