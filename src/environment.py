@@ -2,6 +2,7 @@ import gym_super_mario_bros
 from gym.spaces import Box
 from gym import Wrapper
 from nes_py.wrappers import JoypadSpace
+
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT,COMPLEX_MOVEMENT,RIGHT_ONLY
 import cv2
 import numpy as np
@@ -77,11 +78,15 @@ class GetFrame(Wrapper):
         return states.astype(np.float32)
 
 
-def create_env(world,stage,button):
-    print("b:",button)
+def create_env(world,stage,button,button_pos):
+    print(button)
     env_name = "SuperMarioBros-1-1-v0"
+    actions = button
+    if (button != 'B'):
+        actions = [ [] for i in range(12)]
+        actions[button_pos]= [button]
     env= gym_super_mario_bros.make(env_name)
-    env = JoypadSpace(env,button)
+    env = JoypadSpace(env=env,actions = actions) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
     env = GetReward(env)
     env = GetFrame(env)
     return env, env.observation_space.shape[0], len(button) 

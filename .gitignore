@@ -10,3 +10,6 @@ data/
 pretrained/
 trained_models/
 summary/
+
+# vs code files
+.vscode

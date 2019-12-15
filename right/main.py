@@ -17,7 +17,7 @@ torch.manual_seed(123)
 
 mp = _mp.get_context('spawn')
 button = 'right'
-env, num_states, num_actions = create_env(1,1,button)
+env, num_states, num_actions = create_env(1,1,button,1)
 
 print("num states: {}".format(num_states))
 print("num actions: {}".format(num_actions))

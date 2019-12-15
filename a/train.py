@@ -22,7 +22,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
     button = 'A'
     if save:
         start_time = timeit.default_timer()
-    env, num_states,num_actions = create_env(1,1,button)
+    env, num_states,num_actions = create_env(1,1,button,5)
     #env2 = gym.wrappers.FlattenDictWrapper(env,dict_keys=['observation','desired_goal'])
 
 
