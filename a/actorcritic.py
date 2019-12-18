@@ -14,8 +14,8 @@ class Actor_Critic(torch.nn.Module):
         self.conv3 = nn.Conv2d(32,32,3,stride=2,padding=1)
         self.conv4 = nn.Conv2d(32,32,3,stride=2,padding=1)
 
-        #self.conv1 = nn.Conv2d(9, 32, 3, stride=2, padding=1)
-        #self.conv2 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
+        # self.conv1 = nn.Conv2d(9, 32, 3, stride=2, padding=1)
+        # self.conv2 = nn.Conv2d(32, 32, 3, stride=2, padding=1)
 
         #self.lstm = nn.LSTMCell(14112,512)
         self.lstm = nn.LSTMCell(1152,512)

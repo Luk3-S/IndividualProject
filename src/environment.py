@@ -79,14 +79,14 @@ class GetFrame(Wrapper):
 
 
 def create_env(world,stage,button,button_pos):
-    print(button)
     env_name = "SuperMarioBros-1-1-v0"
     actions = button
-    if (button != 'B'):
-        actions = [ [] for i in range(12)]
-        actions[button_pos]= [button]
+    if (button != 'B'): 
+        if (button_pos != None):
+            actions = [ [] for i in range(12)]
+            actions[button_pos]= [button]
     env= gym_super_mario_bros.make(env_name)
     env = JoypadSpace(env=env,actions = actions) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
     env = GetReward(env)
     env = GetFrame(env)
-    return env, env.observation_space.shape[0], len(button) 
+    return env, env.observation_space.shape[0], len(actions) 

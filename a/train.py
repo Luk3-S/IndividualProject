@@ -42,21 +42,23 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
     step = 0
     episode = 0
     done = True
-
+    save = True
     while True:
         print("episode: {}".format(episode))
         if save == True:
-            if episode > 49 : # episode % 50 == 0 and 
-                print("hello")
-                torch.save(CAE_shared_model.state_dict(),"{}/CAE_super_mario_bros_{}_{}enc1".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models",1,1))
-                torch.save(a3c_local_model.state_dict(),"{}/A3C_super_mario_bros_{}_{}enc".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models",1,1))
+            if episode == 100 : # 500 episode > 0 and episode % 100 ==0 
+                print("saved")
+                torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models",1,1))
+                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models",1,1))
+                #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
             print("process {}. Episode{}".format(index, episode))
         episode +=1
 
 
         a3c_local_model.load_state_dict(A3C_shared_model.state_dict())
+
         try:
-            cae_local_model.load_state_dict(torch.load("{}/CAE_super_mario_bros_1_1_enc2".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models"),map_location='cpu'))
+            cae_local_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models"),map_location='cpu'))
         except:
             print("no file found")
         cae_local_model.eval()
@@ -75,7 +77,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
         rewards=[]
         entropies=[]
 
-        for _ in range(20):
+        for _ in range(200): #500
             print("step: {}".format(step))
             step +=1
 
@@ -100,7 +102,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
             state = torch.from_numpy(state)
 
-            if step > 500:
+            if step > 200:
                 done = True
 
             if done:
@@ -155,7 +157,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
         A3C_optimiser.step()
 
-        if episode == int(51): #5000
+        if episode == int(101): #5000
             print("Training process {} terminated".format(index))
             if save:
                 end_time = timeit.default_timer()

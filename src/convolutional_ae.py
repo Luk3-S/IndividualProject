@@ -1,3 +1,5 @@
+import sys
+sys.path.append("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project")
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,6 +18,8 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from skimage import img_as_float
 import matplotlib.pyplot as plt
 import torchvision
+
+
 class CAE(torch.nn.Module):
 
     def __init__(self):

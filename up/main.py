@@ -15,9 +15,9 @@ from train import train
 torch.manual_seed(123)
 
 mp = _mp.get_context('spawn')
-button = 'UP'
+button = 'up'
 env, num_states, num_actions = create_env(1,1,button,11)
-[['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left'], ['left', 'A'], ['left', 'B'], ['left', 'A', 'B'], ['down'], ['up']]
+#[['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left'], ['left', 'A'], ['left', 'B'], ['left', 'A', 'B'], ['down'], ['up']]
 
 print("num states: {}".format(num_states))
 print("num actions: {}".format(num_actions))
