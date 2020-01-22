@@ -6,10 +6,10 @@ from torch.distributions import Normal
 import os
 import torch
 from src.environment import create_env
-from actorcritic import Actor_Critic
+from b.actorcritic import Actor_Critic
 from src.convolutional_ae import CAE
 from src.SharedAdam import SharedAdam
-from train import train
+from b.train import train
 
 torch.manual_seed(123)
 
@@ -36,3 +36,4 @@ def run_b():
 
 
     train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,False)
+run_b()

@@ -6,18 +6,17 @@ import torch.optim as optim
 from torch.distributions import Normal
 import os
 import torch
-import torch.multiprocessing as _mp
 from src.environment import create_env
-from actorcritic import Actor_Critic
+from down.actorcritic import Actor_Critic
 from src.convolutional_ae import CAE
 from src.SharedAdam import SharedAdam
-from train import train
+from down.train import train
 
 def run_down():
         
     torch.manual_seed(123)
 
-    mp = _mp.get_context('spawn')
+
     button = 'down'
     env, num_states, num_actions = create_env(1,1,button,10)
 
@@ -39,3 +38,4 @@ def run_down():
     optimiser_a3c = SharedAdam(A3C_shared_model.parameters(),lr =0.001)
 
     train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,False)
+run_down()

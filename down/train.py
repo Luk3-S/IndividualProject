@@ -6,11 +6,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import gym_super_mario_bros
 import gym
-import actorcritic
 import torch.multiprocessing as _mp
 from src.environment import create_env
 from src.convolutional_ae import CAE
-from actorcritic import Actor_Critic
+from down.actorcritic import Actor_Critic
 from torch.distributions import Categorical
 from tensorboardX import SummaryWriter
 import timeit
@@ -46,7 +45,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
     while True:
         print("episode: {}".format(episode))
         if save == True:
-            if episode == 100 : # 500 episode > 0 and episode % 100 ==0 
+            if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
                 torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models",1,1))
                 torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models",1,1))
@@ -77,7 +76,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
         rewards=[]
         entropies=[]
 
-        for _ in range(200): #500
+        for _ in range(500): #500
             print("step: {}".format(step))
             step +=1
 
@@ -102,7 +101,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
             state = torch.from_numpy(state)
 
-            if step > 200:
+            if step > 500:
                 done = True
 
             if done:
@@ -157,7 +156,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
         A3C_optimiser.step()
 
-        if episode == int(101): #5000
+        if episode == int(2001): #5000
             print("Training process {} terminated".format(index))
             if save:
                 end_time = timeit.default_timer()

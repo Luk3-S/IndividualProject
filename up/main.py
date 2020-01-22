@@ -6,10 +6,10 @@ from torch.distributions import Normal
 import os
 import torch
 from src.environment import create_env
-from actorcritic import Actor_Critic
+from up.actorcritic import Actor_Critic
 from src.convolutional_ae import CAE
 from src.SharedAdam import SharedAdam
-from train import train
+from up.train import train
 
 def run_up():
     torch.manual_seed(123)
@@ -36,3 +36,4 @@ def run_up():
     optimiser_cae = CAE_shared_model.createLossAndOptimiser(CAE_shared_model,0.001)
     optimiser_a3c = SharedAdam(A3C_shared_model.parameters(),lr =0.001)
     train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,False)
+run_up()

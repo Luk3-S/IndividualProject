@@ -7,10 +7,10 @@ from torch.distributions import Normal
 import os
 import torch
 from src.environment import create_env
-from actorcritic import Actor_Critic
+from left.actorcritic import Actor_Critic
 from src.convolutional_ae import CAE
 from src.SharedAdam import SharedAdam
-from train import train
+from left.train import train
 
 def run_left():
     torch.manual_seed(123)
@@ -36,3 +36,4 @@ def run_left():
     optimiser_a3c = SharedAdam(A3C_shared_model.parameters(),lr =0.001)
 
     train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,False)
+run_left()
