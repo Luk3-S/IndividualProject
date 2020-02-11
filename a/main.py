@@ -1,5 +1,6 @@
 import sys  
-sys.path.append("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project")
+
+sys.path.append("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject")
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Normal
@@ -14,7 +15,7 @@ from a.train import train
 def run_a ():
     torch.manual_seed(123)
     button = 'A'
-    env, num_states, num_actions = create_env(1,1,button,5)
+    env, num_states, num_actions = create_env(1,1)
 
     print("num states: {}".format(num_states))
     print("num actions: {}".format(num_actions))
@@ -34,5 +35,5 @@ def run_a ():
     optimiser_a3c = SharedAdam(A3C_shared_model.parameters(),lr =0.001)
 
     
-    train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True)
+    train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True, button)
 run_a()

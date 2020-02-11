@@ -14,14 +14,16 @@ from torch.distributions import Categorical
 from tensorboardX import SummaryWriter
 import timeit
 
+MOVEMENT_OPTIONS = [['NOOP'], ['right'], ['A'], ['left'], ['down'], ['up'],['B']]
 
 
-def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser,save=True,new_stage=False):
+
+def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser,save,button):
 
     button = 'A'
     if save:
         start_time = timeit.default_timer()
-    env, num_states,num_actions = create_env(1,1,button,5)
+    env, num_states,num_actions = create_env(1,1)
     #env2 = gym.wrappers.FlattenDictWrapper(env,dict_keys=['observation','desired_goal'])
 
 
@@ -47,17 +49,18 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
         if save == True:
             if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
-                torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models",1,1))
-                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models",1,1))
+                torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject\\trained_models",1,1))
+                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject\\trained_models",1,1))
                 #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
-            print("process {}. Episode{}".format(index, episode))
+                
+            #print("process {}. Episode{}".format(index, episode))
         episode +=1
 
 
         a3c_local_model.load_state_dict(A3C_shared_model.state_dict())
 
         try:
-            cae_local_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models"),map_location='cpu'))
+            cae_local_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject\\trained_models"),map_location='cpu'))
         except:
             print("no file found")
         cae_local_model.eval()
@@ -83,7 +86,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
             for param in cae_local_model.parameters():
                 param.requires_grad = False
             
-           
+            ## generate cae's representation of the environment
             output_cae = cae_local_model(state)
 
             logits,value,hx,cx = a3c_local_model(output_cae,hx,cx)
@@ -95,13 +98,16 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
             m = Categorical(policy)
             action = m.sample().item()
+            if (MOVEMENT_OPTIONS[action][0]==button): ## check if the behaviour that we're training is chosen
+                print ("training button chosen")
+            
 
             state,reward,done,_ = env.step(action)
             env.render()
 
             state = torch.from_numpy(state)
 
-            if step > 500:
+            if step > 5000 or episode > 1000:
                 done = True
 
             if done:
@@ -156,7 +162,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
         A3C_optimiser.step()
 
-        if episode == int(2001): #5000
+        if episode == int(1000):
             print("Training process {} terminated".format(index))
             if save:
                 end_time = timeit.default_timer()

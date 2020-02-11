@@ -24,28 +24,34 @@ class CAE(torch.nn.Module):
 
     def __init__(self):
         super(CAE,self).__init__()
-
+        ## encoder
         self.conv1 = nn.Conv2d(4,16,3,padding = 1)
-
         self.conv2 = nn.Conv2d(16,9,3, padding = 1)
 
+        ## decoder 
         self.t_conv1 = nn.ConvTranspose2d(9,16,1)
-        
-        self.t_conv2 = nn.ConvTranspose2d(16,4,1)
+        self.t_conv2 = nn.ConvTranspose2d(16,3,1)
 
 
+    # def encode(self,x):
+    #     x = F.relu(self.conv1(x))
+    #     x = F.relu(self.conv2(x))
+    #     return x
 
+    # def decode(self,x):
+    #     x = F.relu(self.t_conv1(x))
+    #     x = F.sigmoid(self.t_conv2(x))
+    #     return x
+
+    # def forward(self,x):
+    #     out = self.encode(x)
+    #     out = self.decode(x)
+
+    #     return x
     def forward(self,x):
         x = F.relu(self.conv1(x))
-
-        x = F.relu(self.conv2(x))
-
-        x = F.relu(self.t_conv1(x))
-        x = F.sigmoid(self.t_conv2(x))
-
-
+        x = F.relu(self.conv2(x)) 
         return x
-
     
     @staticmethod
     def createLossAndOptimiser(net, learning_rate =0.001):
@@ -229,9 +235,9 @@ def trainCAE(save_weights, save_model):
     print("test size: {}".format(len(test_samp)))
     print("val size: {}".format(len(val_samp)))
 
-    train_loader = DataLoader(dataset,batch_size =4, sampler = train_samp, num_workers =3, drop_last = True)
-    val_loader = DataLoader(dataset,batch_size =4, sampler = val_samp, num_workers =3, drop_last = True)
-    test_loader = DataLoader(dataset,batch_size =4, sampler = test_samp, num_workers =3, drop_last = True)
+    train_loader = DataLoader(dataset,batch_size =4, sampler = train_samp,   drop_last = True)
+    val_loader = DataLoader(dataset,batch_size =4, sampler = val_samp,   drop_last = True)
+    test_loader = DataLoader(dataset,batch_size =4, sampler = test_samp,   drop_last = True)
 
     device = torch.device("cuda"if (torch.cuda.is_available())else "cpu")
     print("cuda available: {}".format(torch.cuda.is_available()))

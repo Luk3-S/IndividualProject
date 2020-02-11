@@ -3,10 +3,11 @@ from gym.spaces import Box
 from gym import Wrapper
 from nes_py.wrappers import JoypadSpace
 
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT,COMPLEX_MOVEMENT,RIGHT_ONLY
 import cv2
 import numpy as np
 import subprocess as sp
+
+MOVEMENT_OPTIONS = [['NOOP'], ['right'], ['A'], ['left'], ['down'], ['up'],['B']]
 
 def process_frame(frame):
     if frame is not None:
@@ -53,16 +54,15 @@ class GetReward(Wrapper):
 
 
 class GetFrame(Wrapper):
-    def __init__(self, env, skip=4):
+    def __init__(self, env):
         super(GetFrame, self).__init__(env)
         self.observation_space = Box(low=0, high=255, shape=(4, 84, 84)) #4*3,84,84
-        self.skip = skip
 
     def step(self, action):
         total_reward = 0
         states = []
         state, reward, done, info = self.env.step(action)
-        for _ in range(self.skip):
+        for _ in range(4):
             if not done:
                 state, reward, done, info = self.env.step(action)
                 total_reward += reward
@@ -74,19 +74,14 @@ class GetFrame(Wrapper):
 
     def reset(self):
         state = self.env.reset()
-        states = np.concatenate([state for _ in range(self.skip)], 0)[None, :, :, :]
+        states = np.concatenate([state for _ in range(4)], 0)[None, :, :, :]
         return states.astype(np.float32)
 
 
-def create_env(world,stage,button,button_pos):
-    env_name = "SuperMarioBros-1-1-v0"
-    actions = button
-    if (button != 'B'): 
-        if (button_pos != None):
-            actions = [ [] for i in range(12)]
-            actions[button_pos]= [button]
+def create_env(world,stage):
+    env_name = "SuperMarioBros-{}-{}-v0".format(world,stage)
     env= gym_super_mario_bros.make(env_name)
-    env = JoypadSpace(env=env,actions = actions) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
+    env = JoypadSpace(env=env,actions=MOVEMENT_OPTIONS) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
     env = GetReward(env)
     env = GetFrame(env)
-    return env, env.observation_space.shape[0], len(actions) 
+    return env, env.observation_space.shape[0], len(MOVEMENT_OPTIONS) 
