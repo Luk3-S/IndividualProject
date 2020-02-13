@@ -14,7 +14,7 @@ from a.train import train
 
 def run_a ():
     torch.manual_seed(123)
-    button = 'A'
+    button = 'down'
     env, num_states, num_actions = create_env(1,1)
 
     print("num states: {}".format(num_states))

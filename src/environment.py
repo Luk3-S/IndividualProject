@@ -2,12 +2,11 @@ import gym_super_mario_bros
 from gym.spaces import Box
 from gym import Wrapper
 from nes_py.wrappers import JoypadSpace
-
 import cv2
 import numpy as np
 import subprocess as sp
 
-MOVEMENT_OPTIONS = [['NOOP'], ['right'], ['A'], ['left'], ['down'], ['up'],['B']]
+MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B']]
 
 def process_frame(frame):
     if frame is not None:
@@ -31,15 +30,24 @@ class GetReward(Wrapper):
         super(GetReward, self).__init__(env)
         self.observation_space = Box(low=0, high=255, shape=(1, 84, 84))
         self.curr_score = 0
+        self.max_x = 0
         
 
     def step(self, action):
         self.env.render()
         state, reward, done, info = self.env.step(action)
         state = process_frame(state)
-        
         reward += (info["score"] - self.curr_score) / 40.
+        #print(self.prior_x, info["x_pos"])
+        self.prior_x = info["x_pos"]
         self.curr_score = info["score"]
+
+        if (info["x_pos"] > self.max_x):
+            print("further")
+            self.max_x = info["x_pos"]
+            reward+=5
+        # else:
+        #     reward-=3
         if done:
             if info["flag_get"]:
                 reward += 50
@@ -81,6 +89,7 @@ class GetFrame(Wrapper):
 def create_env(world,stage):
     env_name = "SuperMarioBros-{}-{}-v0".format(world,stage)
     env= gym_super_mario_bros.make(env_name)
+    print("action space: {}".format(env.action_space.n))
     env = JoypadSpace(env=env,actions=MOVEMENT_OPTIONS) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
     env = GetReward(env)
     env = GetFrame(env)

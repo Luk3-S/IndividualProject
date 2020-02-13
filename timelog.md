@@ -198,9 +198,15 @@
 * *1hour* continuing with dissertation writing
 ## 7 Feb 2020
 * *1 hour* evaluating the agent's peformance when trained on all buttons - this could possibly be used for comparisons later on.
+* *1 hour* realised that approach to training buttons was incorrect, noted changes to be (hopefully) made 
 
-TODO: finish 7,8,10
+## 10 Feb 2020
+* *1 hour* began to write on pen & paper how this implementation would work
 
 ## Week 17
 ### 11 Feb 2020
 * *1 hour* refactoring codebase to reflect implementation change regarding which button is being trained
+* *2 hour* looking through simple nn - on how to train specific behaviour
+
+### 13 Feb 2020
+* *4 hour* re-writing and testing a/train to reflect design changes. changes also made to environment.py to reflect design changes.
