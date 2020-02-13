@@ -12,9 +12,11 @@ from src.convolutional_ae import CAE
 from src.SharedAdam import SharedAdam
 from a.train import train
 
-def run_a ():
+MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B']]
+
+def run_a (button_to_train):
     torch.manual_seed(123)
-    button = 'down'
+    #button = 'down'
     env, num_states, num_actions = create_env(1,1)
 
     print("num states: {}".format(num_states))
@@ -35,5 +37,6 @@ def run_a ():
     optimiser_a3c = SharedAdam(A3C_shared_model.parameters(),lr =0.001)
 
     
-    train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True, button)
-run_a()
+    train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True, button_to_train)
+for button in MOVEMENT_OPTIONS:
+    run_a(button)
