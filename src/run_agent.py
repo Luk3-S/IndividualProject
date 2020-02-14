@@ -1,6 +1,8 @@
 import os
 import sys
-sys.path.append("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project")
+laptop_path = "C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject"
+desktop_path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
+sys.path.append(desktop_path)
 os.environ['OMP_NUM_THREADS'] = '1'
 import torch
 from a.actorcritic import Actor_Critic
@@ -15,20 +17,20 @@ import torch.nn.functional as F
 def run_test():
     torch.manual_seed(123)
    
-    env, num_states, num_actions = create_env(2,1, COMPLEX_MOVEMENT,None)#, args.action_type,"{}/video_{}_{}.mp4".format(args.output_path, args.world, args.stage))
+    env, num_states, num_actions = create_env(1,1)#, args.action_type,"{}/video_{}_{}.mp4".format(args.output_path, args.world, args.stage))
     CAE_model = CAE()
     
     a3c_model = Actor_Critic(num_states, num_actions)
 
     if torch.cuda.is_available():
-        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models", 1, 1)))
+        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\right", 1, 1)))
         a3c_model.cuda()
         CAE_model.cuda()
     else:
-        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models", 1, 1),
+        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\right", 1, 1),
                                          map_location=lambda storage, loc: storage))
 
-    CAE_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project\\trained_models"),map_location='cpu'))
+    CAE_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(desktop_path+"\\trained_models"),map_location='cpu'))
 
 
     a3c_model.eval()

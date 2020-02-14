@@ -37,17 +37,16 @@ class GetReward(Wrapper):
         self.env.render()
         state, reward, done, info = self.env.step(action)
         state = process_frame(state)
-        reward += (info["score"] - self.curr_score) / 40.
+        reward += (info["score"] - self.curr_score) / 20.
         #print(self.prior_x, info["x_pos"])
         self.prior_x = info["x_pos"]
         self.curr_score = info["score"]
 
         if (info["x_pos"] > self.max_x):
-            print("further")
             self.max_x = info["x_pos"]
-            reward+=5
-        # else:
-        #     reward-=3
+            reward+=20
+        else:
+            reward-=3
         if done:
             if info["flag_get"]:
                 reward += 50
@@ -89,7 +88,6 @@ class GetFrame(Wrapper):
 def create_env(world,stage):
     env_name = "SuperMarioBros-{}-{}-v0".format(world,stage)
     env= gym_super_mario_bros.make(env_name)
-    print("action space: {}".format(env.action_space.n))
     env = JoypadSpace(env=env,actions=MOVEMENT_OPTIONS) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
     env = GetReward(env)
     env = GetFrame(env)

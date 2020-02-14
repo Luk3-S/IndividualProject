@@ -1,6 +1,7 @@
 import sys  
-
-sys.path.append("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject")
+laptop_path = "C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject"
+desktop_path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
+sys.path.append(desktop_path)
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Normal
@@ -14,13 +15,13 @@ from a.train import train
 
 MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B']]
 
-def run_a (button_to_train):
+def run_a (button_to_train,pos):
     torch.manual_seed(123)
     #button = 'down'
     env, num_states, num_actions = create_env(1,1)
 
-    print("num states: {}".format(num_states))
-    print("num actions: {}".format(num_actions))
+    # print("num states: {}".format(num_states))
+    # print("num actions: {}".format(num_actions))
     print("env: {}".format(env))
 
     CAE_shared_model = CAE()
@@ -28,6 +29,16 @@ def run_a (button_to_train):
 
     CAE_shared_model.share_memory()
     A3C_shared_model.share_memory()
+
+    print('Loading A3C parametets ...')
+    if pos >=10:
+        pretrained_dict = torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format(MOVEMENT_OPTIONS[pos][0]),1,1))
+        model_dict = A3C_shared_model.state_dict()
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        model_dict.update(pretrained_dict) 
+        A3C_shared_model.load_state_dict(model_dict)
+
+
     #print("A3C - shared")
     #print(A3C_shared_model)
     #print("num states: {} , num actions: {}".format(num_states,num_actions))
@@ -38,5 +49,8 @@ def run_a (button_to_train):
 
     
     train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True, button_to_train)
-for button in MOVEMENT_OPTIONS:
-    run_a(button)
+# pos =-1
+# for button in MOVEMENT_OPTIONS:
+#     print(button)
+run_a(['right'],0)
+#     pos+=1

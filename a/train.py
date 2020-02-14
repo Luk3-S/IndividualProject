@@ -1,6 +1,8 @@
 
-import sys  
-sys.path.append("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject")
+import sys
+laptop_path = "C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject"
+desktop_path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
+sys.path.append(desktop_path)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,7 +22,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
     BUTTON_PRESSED = False
     MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B']]
 
-    no_steps = 250
+    no_steps = 400
     no_episodes = 1000
     if save:
         start_time = timeit.default_timer()
@@ -46,8 +48,8 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
         if save == True:
             if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
-                torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject\\trained_models",1,1))
-                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject\\{}".format(button[0]),1,1))
+                torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format(desktop_path+"\\trained_models",1,1))
+                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format(button[0]),1,1))
                 #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
                 
             #print("process {}. Episode{}".format(index, episode))
@@ -57,7 +59,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
         a3c_local_model.load_state_dict(A3C_shared_model.state_dict())
 
         try:
-            cae_local_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format("C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject\\trained_models"),map_location='cpu'))
+            cae_local_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(desktop_path+"\\trained_models"),map_location='cpu'))
         except:
             print("no file found")
         cae_local_model.eval()
@@ -95,9 +97,8 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
             m = Categorical(policy)
             action = m.sample().item()
-            if (MOVEMENT_OPTIONS[action][0]==button): ## check if the behaviour that we're training is chosen
+            if (MOVEMENT_OPTIONS[action]==button): ## check if the behaviour that we're training is chosen
                 BUTTON_PRESSED = True
-                #print ("training button chosen")
             
 
             state,reward,done,_ = env.step(action)
@@ -123,23 +124,23 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
                 entropies.append(entropy)
                 BUTTON_PRESSED = False
 
-            if done: 
-                break
-        print("250 steps done")
-        R = torch.zeros((1,1),dtype=torch.float)
+                if done: 
+                    break
+        
+                R = torch.zeros((1,1),dtype=torch.float)
 
-        if not done:
-            output = cae_local_model(state)
-            _,R,_,_ = a3c_local_model(output,hx,cx)
+                if not done:
+                    output = cae_local_model(state)
+                    _,R,_,_ = a3c_local_model(output,hx,cx)
 
-        gae = torch.zeros((1,1),dtype=torch.float)
+                gae = torch.zeros((1,1),dtype=torch.float)
 
-        actor_loss = 0
-        critic_loss = 0
-        entropy_loss = 0
-        next_value = R
+                actor_loss = 0
+                critic_loss = 0
+                entropy_loss = 0
+                next_value = R
 
-        if (len(values)>1):## check if we've actually pressed said button, and if so, then apply rewards etc.
+        if (len(values)>0):## check if we've actually pressed said button, and if so, then apply rewards etc.
             for value, log_policy, reward, entropy in list(zip(values,log_policies,rewards,entropies))[::-1]:
                 #print("v:{}, lp:{}, r:{}, e:{} ".format(value,log_policy,reward,entropy))
                 gae = gae * 0.1 * 0.2 # gamma = 0.1 , tau = 0.2

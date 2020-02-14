@@ -15,6 +15,7 @@ class Actor_Critic(torch.nn.Module):
         self.lstm = nn.LSTMCell(14112,512)
         # self.lstm = nn.LSTMCell(1152,512)
         self.critic_linear = nn.Linear(512,1)
+        print("n actions :{}".format(num_actions))
         self.actor_linear = nn.Linear(512,num_actions)
 
         self._initialise_weights()
