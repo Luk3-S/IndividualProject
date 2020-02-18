@@ -2,7 +2,7 @@
 import sys
 laptop_path = "C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject"
 desktop_path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
-sys.path.append(desktop_path)
+sys.path.append(laptop_path)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,9 +20,10 @@ import timeit
 def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser,save,button):
     
     BUTTON_PRESSED = False
-    MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B']]
+    MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
 
-    no_steps = 400
+    no_steps = 100
+    max_steps = 1600 ## max steps possible in 400 seconds
     no_episodes = 1000
     if save:
         start_time = timeit.default_timer()
@@ -48,18 +49,17 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
         if save == True:
             if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
-                torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format(desktop_path+"\\trained_models",1,1))
-                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format(button[0]),1,1))
+                torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format(laptop_path+"\\trained_models",1,1))
+                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(laptop_path+"\\{}".format(button[0]),1,1))
                 #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
                 
             #print("process {}. Episode{}".format(index, episode))
-        episode +=1
 
 
         a3c_local_model.load_state_dict(A3C_shared_model.state_dict())
 
         try:
-            cae_local_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(desktop_path+"\\trained_models"),map_location='cpu'))
+            cae_local_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(laptop_path+"\\trained_models"),map_location='cpu'))
         except:
             print("no file found")
         cae_local_model.eval()
@@ -97,24 +97,21 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
             m = Categorical(policy)
             action = m.sample().item()
-            if (MOVEMENT_OPTIONS[action]==button): ## check if the behaviour that we're training is chosen
+            if (MOVEMENT_OPTIONS[action]==button or MOVEMENT_OPTIONS[action][0]==button[0]):
+                #print(MOVEMENT_OPTIONS[action]) ## check if the behaviour that we're training is chosen
                 BUTTON_PRESSED = True
             
-
             state,reward,done,_ = env.step(action)
-            env.render()
+            state = torch.from_numpy(state)      
 
-            state = torch.from_numpy(state)
-
-            if step > no_steps or episode > no_episodes:
+            if step > max_steps or episode > no_episodes:
                 done = True
 
             if done:
                 step = 0
                 state = torch.from_numpy(env.reset())
-            
 
-
+            print("step: {}".format(step))
             if (BUTTON_PRESSED):
                 #print("")
             ## only do the following if we have our button pressed? i.e only reward when button 
@@ -125,7 +122,9 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
                 BUTTON_PRESSED = False
 
                 if done: 
+                    print("episode finished 1")
                     break
+                
         
                 R = torch.zeros((1,1),dtype=torch.float)
 
@@ -139,21 +138,26 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
                 critic_loss = 0
                 entropy_loss = 0
                 next_value = R
-
+                #print("step count: {}".format(step))
+                if done: 
+                    #print("episode finished 2")
+                    break
+        
         if (len(values)>0):## check if we've actually pressed said button, and if so, then apply rewards etc.
             for value, log_policy, reward, entropy in list(zip(values,log_policies,rewards,entropies))[::-1]:
                 #print("v:{}, lp:{}, r:{}, e:{} ".format(value,log_policy,reward,entropy))
-                gae = gae * 0.1 * 0.2 # gamma = 0.1 , tau = 0.2
-                gae = gae + reward + 0.1 * next_value.detach() - value.detach()
+                gae = gae * 0.9 * 1 # gamma = 0.1 , tau = 0.2
+                gae = gae + reward + 0.9 * next_value.detach() - value.detach()
                 next_value = value
                 actor_loss = actor_loss + log_policy * gae
-                R = R * 0.1 + reward
+                R = R * 0.9 + reward
                 critic_loss = critic_loss + (R-value) **2 /2
                 entropy_loss = entropy_loss + entropy
             
-            print("\n")
+            print(rewards)
+            print("episode {} cumulative rewards: {}".format(episode,sum(rewards)))
             print("a: {}, c: {}, e: {}".format(actor_loss,critic_loss,entropy_loss))
-            total_loss = -actor_loss + critic_loss - 0.3 * entropy_loss # beta = 0.3
+            total_loss = -actor_loss + critic_loss - 0.01 * entropy_loss # beta = 0.3
             
             #print("index: {}".format(index))
             print("total_loss: {}".format(total_loss))
@@ -172,7 +176,8 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
                 global_param._grad = local_param.grad
 
             A3C_optimiser.step()
-
+        episode +=1
+    
         if episode == no_episodes:
             print("Training process {} terminated".format(index))
             if save:

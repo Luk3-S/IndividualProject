@@ -2,7 +2,7 @@ import os
 import sys
 laptop_path = "C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject"
 desktop_path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
-sys.path.append(desktop_path)
+sys.path.append(laptop_path)
 os.environ['OMP_NUM_THREADS'] = '1'
 import torch
 from a.actorcritic import Actor_Critic
@@ -23,14 +23,14 @@ def run_test():
     a3c_model = Actor_Critic(num_states, num_actions)
 
     if torch.cuda.is_available():
-        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\right", 1, 1)))
+        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(laptop_path+"\\right", 1, 1)))
         a3c_model.cuda()
         CAE_model.cuda()
     else:
-        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\right", 1, 1),
+        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(laptop_path+"\\right", 1, 1),
                                          map_location=lambda storage, loc: storage))
 
-    CAE_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(desktop_path+"\\trained_models"),map_location='cpu'))
+    CAE_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(laptop_path+"\\trained_models"),map_location='cpu'))
 
 
     a3c_model.eval()

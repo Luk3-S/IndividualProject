@@ -210,3 +210,14 @@
 
 ### 13 Feb 2020
 * *4 hour* re-writing and testing a/train to reflect design changes. changes also made to environment.py to reflect design changes.
+
+### 14 Feb 2020
+* *0.5 hour* advisor meeting
+* *2 hour* more progress made on train script
+
+### 15 Feb 2020
+* *3 hour* more time spent testing and adjusting parameters on train script
+
+## Week 18
+### 18 Feb 2020
+* *2.5 hour* ammending training script to include [right], [right,a], [right,a,b] button presses for example.
