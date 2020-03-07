@@ -1,5 +1,6 @@
 import sys
-sys.path.append("C:\\Users\\UKGC-PC\\Documents\\Level 4 Project")
+desktop_path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
+sys.path.append(desktop_path)
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F

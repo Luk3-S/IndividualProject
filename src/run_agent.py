@@ -2,7 +2,7 @@ import os
 import sys
 laptop_path = "C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject"
 desktop_path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
-sys.path.append(laptop_path)
+sys.path.append(desktop_path)
 os.environ['OMP_NUM_THREADS'] = '1'
 import torch
 from a.actorcritic import Actor_Critic
@@ -12,6 +12,7 @@ from environment import create_env
 from convolutional_ae import CAE
 import torch.nn.functional as F
 
+MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
 
 
 def run_test():
@@ -23,14 +24,15 @@ def run_test():
     a3c_model = Actor_Critic(num_states, num_actions)
 
     if torch.cuda.is_available():
-        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(laptop_path+"\\right", 1, 1)))
+        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\lstm", 1, 1)))
+        print("loaded")
         a3c_model.cuda()
         CAE_model.cuda()
     else:
-        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(laptop_path+"\\right", 1, 1),
+        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\lstm", 1, 1),
                                          map_location=lambda storage, loc: storage))
 
-    CAE_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(laptop_path+"\\trained_models"),map_location='cpu'))
+    CAE_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(desktop_path+"\\trained_models"),map_location='cpu'))
 
 
     a3c_model.eval()
@@ -50,11 +52,12 @@ def run_test():
             c_0 = c_0.cuda()
             state = state.cuda()
         output_cae = CAE_model(state)
-        logits, value, h_0, c_0 = a3c_model(output_cae, h_0, c_0)
+        logits, _, h_0, c_0 = a3c_model(output_cae, h_0, c_0)
             
         policy = F.softmax(logits, dim=1)
         action = torch.argmax(policy).item()
         action = int(action)
+        #print(MOVEMENT_OPTIONS[action])
         state, _, done, info = env.step(action)
         state = torch.from_numpy(state)
         env.render()

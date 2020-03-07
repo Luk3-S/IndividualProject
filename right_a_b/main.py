@@ -8,15 +8,15 @@ from torch.distributions import Normal
 import os
 import torch
 from src.environment import create_env
-from b.actorcritic import Actor_Critic
+from right_a_b.actorcritic import Actor_Critic
 from src.convolutional_ae import CAE
 from src.SharedAdam import SharedAdam
-from b.train import train
+from right_a_b.train import train
 
 MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
 
 
-def run_b (button_to_train):
+def run_right_a_b (button_to_train):
     torch.manual_seed(123)
     #button = 'down'
     env, num_states, num_actions = create_env(1,1)
@@ -33,7 +33,7 @@ def run_b (button_to_train):
 
     print('Attempting to load A3C parametets ...')
     try:
-        pretrained_dict = torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("up"),1,1))
+        pretrained_dict = torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("right,a"),1,1))
         model_dict = A3C_shared_model.state_dict()
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
         model_dict.update(pretrained_dict) 
@@ -56,7 +56,9 @@ def run_b (button_to_train):
 # pos =-1
 # for button in MOVEMENT_OPTIONS:
 #     print(button)
-def b_main():
-    run_b(['B'])
+
+def right_a_b_main():
+    run_right_a_b(['right','A','B'])
 #     pos+=1
-b_main()
+
+right_a_b_main()

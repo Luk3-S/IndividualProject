@@ -50,7 +50,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
             if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
                 torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format(desktop_path+"\\trained_models",1,1))
-                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("up"),1,1))
+                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("right_a_b"),1,1))
                 #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
                 
             #print("process {}. Episode{}".format(index, episode))
@@ -156,28 +156,28 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
                 critic_loss = critic_loss + (R-value) **2 /2
                 entropy_loss = entropy_loss + entropy
             
-            print(rewards)
-            print("episode {} cumulative rewards: {}".format(episode,sum(rewards)))
-            print("a: {}, c: {}, e: {}".format(actor_loss,critic_loss,entropy_loss))
-            total_loss = -actor_loss + critic_loss - 0.01 * entropy_loss # beta = 0.3
-            
-            #print("index: {}".format(index))
-            print("total_loss: {}".format(total_loss))
-            #print("episode: {}".format(episode))
-            print("\n")
+        print(rewards)
+        print("episode {} cumulative rewards: {}".format(episode,sum(rewards)))
+        print("a: {}, c: {}, e: {}".format(actor_loss,critic_loss,entropy_loss))
+        total_loss = -actor_loss + critic_loss - 0.01 * entropy_loss # beta = 0.3
+        
+        #print("index: {}".format(index))
+        print("total_loss: {}".format(total_loss))
+        #print("episode: {}".format(episode))
+        print("\n")
 
-            A3C_optimiser.zero_grad()
-            # if total_loss == 0:
-            #      total_loss = torch.tensor([[0.0]],requires_grad=True)
-            total_loss.backward(retain_graph=True)
-            #update model
+        A3C_optimiser.zero_grad()
+        # if total_loss == 0:
+        #      total_loss = torch.tensor([[0.0]],requires_grad=True)
+        total_loss.backward()
+        #update model
 
-            for local_param, global_param in zip(a3c_local_model.parameters(),A3C_shared_model.parameters()):
-                if global_param.grad is not None:
-                    break
-                global_param._grad = local_param.grad
+        for local_param, global_param in zip(a3c_local_model.parameters(),A3C_shared_model.parameters()):
+            if global_param.grad is not None:
+                break
+            global_param._grad = local_param.grad
 
-            A3C_optimiser.step()
+        A3C_optimiser.step()
         episode +=1
     
         if episode == no_episodes+1:

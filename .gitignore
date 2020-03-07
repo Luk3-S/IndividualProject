@@ -13,3 +13,6 @@ summary/
 
 # vs code files
 .vscode
+
+# ignore weights
+**/A3C

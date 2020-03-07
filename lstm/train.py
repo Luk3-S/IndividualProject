@@ -17,9 +17,9 @@ from tensorboardX import SummaryWriter
 import timeit
 
 
-def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser,save,button):
+def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser,save):
     
-    BUTTON_PRESSED = False
+    #BUTTON_PRESSED = False
     MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
 
     no_steps = 100
@@ -50,7 +50,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
             if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
                 torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format(desktop_path+"\\trained_models",1,1))
-                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("up"),1,1))
+                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("lstm"),1,1))
                 #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
                 
             #print("process {}. Episode{}".format(index, episode))
@@ -99,9 +99,9 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
             action = m.sample().item()
             
             #print(MOVEMENT_OPTIONS[action],MOVEMENT_OPTIONS[action][0]==button[0])
-            if (MOVEMENT_OPTIONS[action]==button or button[0] in MOVEMENT_OPTIONS[action]):
-            #     #print(MOVEMENT_OPTIONS[action]) ## check if the behaviour that we're training is chosen
-                BUTTON_PRESSED = True
+            #if (MOVEMENT_OPTIONS[action]==button or button[0] in MOVEMENT_OPTIONS[action]):
+                #print(MOVEMENT_OPTIONS[action]) ## check if the behaviour that we're training is chosen
+                #BUTTON_PRESSED = True
             
             state,reward,done,_ = env.step(action)
             state = torch.from_numpy(state)      
@@ -114,70 +114,70 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
                 state = torch.from_numpy(env.reset())
 
             #print("step: {}".format(step))
-            if (BUTTON_PRESSED):
+            #if (BUTTON_PRESSED):
                 #print("")
             ## only do the following if we have our button pressed? i.e only reward when button 
-                values.append(value)
-                log_policies.append(log_policy[0,action])
-                rewards.append(reward)
-                entropies.append(entropy)
-                BUTTON_PRESSED = False
+            values.append(value)
+            log_policies.append(log_policy[0,action])
+            rewards.append(reward)
+            entropies.append(entropy)
+            BUTTON_PRESSED = False
 
-                if done: 
-                    print("episode finished 1")
-                    break
-                
-        
-                R = torch.zeros((1,1),dtype=torch.float)
-
-                if not done:
-                    output = cae_local_model(state)
-                    _,R,_,_ = a3c_local_model(output,hx,cx)
-
-                gae = torch.zeros((1,1),dtype=torch.float)
-
-                actor_loss = 0
-                critic_loss = 0
-                entropy_loss = 0
-                next_value = R
-                #print("step count: {}".format(step))
-                if done: 
-                    #print("episode finished 2")
-                    break
-        
-        if (len(values)>0):## check if we've actually pressed said button, and if so, then apply rewards etc.
-            for value, log_policy, reward, entropy in list(zip(values,log_policies,rewards,entropies))[::-1]:
-                #print("v:{}, lp:{}, r:{}, e:{} ".format(value,log_policy,reward,entropy))
-                gae = gae * 0.9 * 1 # gamma = 0.1 , tau = 0.2
-                gae = gae + reward + 0.9 * next_value.detach() - value.detach()
-                next_value = value
-                actor_loss = actor_loss + log_policy * gae
-                R = R * 0.9 + reward
-                critic_loss = critic_loss + (R-value) **2 /2
-                entropy_loss = entropy_loss + entropy
+            if done: 
+                print("episode finished 1")
+                break
             
-            print(rewards)
-            print("episode {} cumulative rewards: {}".format(episode,sum(rewards)))
-            print("a: {}, c: {}, e: {}".format(actor_loss,critic_loss,entropy_loss))
-            total_loss = -actor_loss + critic_loss - 0.01 * entropy_loss # beta = 0.3
+    
+            R = torch.zeros((1,1),dtype=torch.float)
+
+            if not done:
+                output = cae_local_model(state)
+                _,R,_,_ = a3c_local_model(output,hx,cx)
+
+            gae = torch.zeros((1,1),dtype=torch.float)
+
+            actor_loss = 0
+            critic_loss = 0
+            entropy_loss = 0
+            next_value = R
+            #print("step count: {}".format(step))
+            if done: 
+                #print("episode finished 2")
+                break
+        
+        #if (len(values)>0):## check if we've actually pressed said button, and if so, then apply rewards etc.
+        for value, log_policy, reward, entropy in list(zip(values,log_policies,rewards,entropies))[::-1]:
+            #print("v:{}, lp:{}, r:{}, e:{} ".format(value,log_policy,reward,entropy))
+            gae = gae * 0.9 * 1 # gamma = 0.1 , tau = 0.2
+            gae = gae + reward + 0.9 * next_value.detach() - value.detach()
+            next_value = value
+            actor_loss = actor_loss + log_policy * gae
+            R = R * 0.9 + reward
+            critic_loss = critic_loss + (R-value) **2 /2
+            entropy_loss = entropy_loss + entropy
+            
+        print(rewards)
+        print("episode {} cumulative rewards: {}".format(episode,sum(rewards)))
+        print("a: {}, c: {}, e: {}".format(actor_loss,critic_loss,entropy_loss))
+        total_loss = -actor_loss + critic_loss - 0.01 * entropy_loss # beta = 0.3
             
             #print("index: {}".format(index))
-            print("total_loss: {}".format(total_loss))
+        print("total_loss: {}".format(total_loss))
             #print("episode: {}".format(episode))
-            print("\n")
+        print("\n")
 
-            A3C_optimiser.zero_grad()
+        A3C_optimiser.zero_grad()
             # if total_loss == 0:
             #      total_loss = torch.tensor([[0.0]],requires_grad=True)
-            total_loss.backward(retain_graph=True)
+        total_loss.backward(retain_graph=True)
             #update model
 
-            for local_param, global_param in zip(a3c_local_model.parameters(),A3C_shared_model.parameters()):
-                if global_param.grad is not None:
-                    break
-                global_param._grad = local_param.grad
+        for local_param, global_param in zip(a3c_local_model.parameters(),A3C_shared_model.parameters()):
+            if global_param.grad is not None:
+                break
+            global_param._grad = local_param.grad
 
-            A3C_optimiser.step()
+        A3C_optimiser.step()
         episode +=1
     
         if episode == no_episodes+1:

@@ -8,15 +8,15 @@ from torch.distributions import Normal
 import os
 import torch
 from src.environment import create_env
-from b.actorcritic import Actor_Critic
+from a.actorcritic import Actor_Critic
 from src.convolutional_ae import CAE
 from src.SharedAdam import SharedAdam
-from b.train import train
+from train import train
 
 MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
 
 
-def run_b (button_to_train):
+def run_lstm ():
     torch.manual_seed(123)
     #button = 'down'
     env, num_states, num_actions = create_env(1,1)
@@ -31,17 +31,16 @@ def run_b (button_to_train):
     CAE_shared_model.share_memory()
     A3C_shared_model.share_memory()
 
-    print('Attempting to load A3C parametets ...')
+    print('Loading A3C parametets ...')
     try:
-        pretrained_dict = torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("up"),1,1))
+        pretrained_dict = torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("B"),1,1))
         model_dict = A3C_shared_model.state_dict()
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
         model_dict.update(pretrained_dict) 
         A3C_shared_model.load_state_dict(model_dict)
         print("loaded parameters")
     except:
-        print("Failed to load parameters")
-
+        print("couldn't load params")
 
     #print("A3C - shared")
     #print(A3C_shared_model)
@@ -52,11 +51,9 @@ def run_b (button_to_train):
     optimiser_a3c = SharedAdam(A3C_shared_model.parameters(),lr =0.001)
 
     
-    train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True, button_to_train)
+    train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True)
 # pos =-1
 # for button in MOVEMENT_OPTIONS:
 #     print(button)
-def b_main():
-    run_b(['B'])
+run_lstm()
 #     pos+=1
-b_main()

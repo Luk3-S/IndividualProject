@@ -40,54 +40,61 @@ class GetReward(Wrapper):
 
     def step(self, action):
         self.env.render()
+        reward=0
+        state, _, done, info = self.env.step(action)
 
-        state, reward, done, info = self.env.step(action)
         state = process_frame(state)
-        #reward += (info["score"] - self.curr_score) / 10.
-        reward = self.generate_reward(reward,info,done)
-        return state, reward , done, info # reward/ 10.
+        reward += (info["score"] - self.curr_score) /10.
+        self.curr_score = info["score"]
+
+        reward += self.generate_reward(reward,info,done)
+        #if done:
+            # if info["flag_get"]:
+            #     reward += 100
+            # else: ## dead / time ran out
+            #     reward -= 35
+        return state, reward/10. , done, info # reward/ 10.
 
 
     def generate_reward(self,reward,info,done):
         self.timesCounted+=1
-        self.curr_score = info["score"]
         self.curr_x = info["x_pos"]
         self.step_count+=1
 
         ## episode-specific rewards
         if (self.curr_x > self.ep_max): ## if mario progresses during an episode, allocate reward and update the episode's max x pos
-            reward+=3
+            reward+=1
             self.stationary_count=0
             self.ep_max = self.curr_x
         
-        if (self.curr_x == self.ep_max): ## if mario isn't progressing - i.e. stuck  against pipe, negatively reward staying still
-            self.stationary_count+=1
-            self.ep_max = self.curr_x
-            if (self.stationary_count >= 40): ## if we've been stationary for 30 actions negatively reward. However if been standing still for a long time, and then eventually take
-                #reward-=3     
-                if (self.curr_x > self.ep_max):
-                    print("surpassed!")
-                    self.ep_max = self.curr_x
-                    self.stationary_count = 0
-                    reward+=15
+        # if (self.curr_x == self.ep_max): ## if mario isn't progressing - i.e. stuck  against pipe, negatively reward staying still
+        #     self.stationary_count+=1
+        #     self.ep_max = self.curr_x
+        #     if (self.stationary_count >= 40): ## if we've been stationary for 30 actions negatively reward. However if been standing still for a long time, and then eventually take
+        #         #reward-=3     
+        #         if (self.curr_x > self.ep_max):
+        #             print("surpassed!")
+        #             self.ep_max = self.curr_x
+        #             self.stationary_count = 0
+        #             reward+=15
 
         ## rewards in play while mario is currently playing (either not dead, or time hasn't run out yet)
 
         if (self.ep_max > self.lifetime_max): ## if episode surpasses lifetime x pos
-            reward+=5
+            reward+=1
             self.lifetime_max = self.ep_max
         
         if done:
             if info["flag_get"]:
-                reward += 100
+                reward += 10
             else: ## dead / time ran out
-                reward -= 50 ## 30
+                reward -= 5 ## 30
         
         # if (self.ep_max > self.training_max):
         #     print("training max exceeded")
         #     self.training_max = self.ep_max
         #     reward+=30
-        self.reset_step_specifics
+        #self.reset_step_specifics
 
 
         # if (info["x_pos"] > self.max_x and info["x_pos"] >=100): # reward agent for progressing through level
@@ -120,9 +127,9 @@ class GetReward(Wrapper):
         
         # ## set prev_x to current
         # self.prev_x = info["x_pos"]
-        # if (self.step_count ==250):
+        if (self.step_count ==500): ##
         #     print("reset step specifics")
-        #     self.reset_step_specifics()
+            self.reset_step_specifics()
         #print("times Counted: {}".format(self.timesCounted))
         return reward
     def reset_step_specifics(self):
