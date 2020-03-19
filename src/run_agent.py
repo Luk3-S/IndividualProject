@@ -13,6 +13,7 @@ from convolutional_ae import CAE
 import torch.nn.functional as F
 
 MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
+right_only = [['right'],['right','A'],['right','A','B']]
 
 
 def run_test():
@@ -24,12 +25,12 @@ def run_test():
     a3c_model = Actor_Critic(num_states, num_actions)
 
     if torch.cuda.is_available():
-        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\lstm", 1, 1)))
+        a3c_model.load_state_dict(torch.load("{}\\193A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\lstm", 1, 1)))
         print("loaded")
         a3c_model.cuda()
         CAE_model.cuda()
     else:
-        a3c_model.load_state_dict(torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\lstm", 1, 1),
+        a3c_model.load_state_dict(torch.load("{}\\193A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\lstm", 1, 1),
                                          map_location=lambda storage, loc: storage))
 
     CAE_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(desktop_path+"\\trained_models"),map_location='cpu'))
@@ -57,7 +58,7 @@ def run_test():
         policy = F.softmax(logits, dim=1)
         action = torch.argmax(policy).item()
         action = int(action)
-        #print(MOVEMENT_OPTIONS[action])
+        print(MOVEMENT_OPTIONS[action])
         state, _, done, info = env.step(action)
         state = torch.from_numpy(state)
         env.render()

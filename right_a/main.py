@@ -14,7 +14,7 @@ from src.SharedAdam import SharedAdam
 from right_a.train import train
 
 MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
-
+right_only = [['right'],['right','A'],['right','A','B']]
 
 def run_right_a (button_to_train):
     torch.manual_seed(123)
@@ -33,7 +33,7 @@ def run_right_a (button_to_train):
 
     print('Attempting to load A3C parametets ...')
     try:
-        pretrained_dict = torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("b"),1,1))
+        pretrained_dict = torch.load("{}\\193A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("right"),1,1))#b
         model_dict = A3C_shared_model.state_dict()
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
         model_dict.update(pretrained_dict) 

@@ -24,7 +24,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
     no_steps = 100
     max_steps = 1600 ## max steps possible in 400 seconds
-    no_episodes = 1000
+    no_episodes = 500
     if save:
         start_time = timeit.default_timer()
     env, num_states,num_actions = create_env(1,1)
@@ -50,7 +50,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
             if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
                 torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format(desktop_path+"\\trained_models",1,1))
-                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("lstm"),1,1))
+                torch.save(A3C_shared_model.state_dict(),"{}\\193A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("lstm"),1,1))
                 #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
                 
             #print("process {}. Episode{}".format(index, episode))
@@ -121,7 +121,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
             log_policies.append(log_policy[0,action])
             rewards.append(reward)
             entropies.append(entropy)
-            BUTTON_PRESSED = False
+           ## BUTTON_PRESSED = False
 
             if done: 
                 print("episode finished 1")

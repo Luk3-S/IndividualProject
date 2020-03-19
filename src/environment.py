@@ -7,7 +7,7 @@ import numpy as np
 import subprocess as sp
 
 MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
-
+right_only = [['right'],['right','A'],['right','A','B']]
 def process_frame(frame):
     if frame is not None:
         #print('Frame shape before convertion: {}'.format(frame.shape))
@@ -39,7 +39,7 @@ class GetReward(Wrapper):
         self.training_max = 0
 
     def step(self, action):
-        self.env.render()
+        #self.env.render()
         reward=0
         state, _, done, info = self.env.step(action)
 
@@ -66,19 +66,6 @@ class GetReward(Wrapper):
             reward+=1
             self.stationary_count=0
             self.ep_max = self.curr_x
-        
-        # if (self.curr_x == self.ep_max): ## if mario isn't progressing - i.e. stuck  against pipe, negatively reward staying still
-        #     self.stationary_count+=1
-        #     self.ep_max = self.curr_x
-        #     if (self.stationary_count >= 40): ## if we've been stationary for 30 actions negatively reward. However if been standing still for a long time, and then eventually take
-        #         #reward-=3     
-        #         if (self.curr_x > self.ep_max):
-        #             print("surpassed!")
-        #             self.ep_max = self.curr_x
-        #             self.stationary_count = 0
-        #             reward+=15
-
-        ## rewards in play while mario is currently playing (either not dead, or time hasn't run out yet)
 
         if (self.ep_max > self.lifetime_max): ## if episode surpasses lifetime x pos
             reward+=1
@@ -86,44 +73,14 @@ class GetReward(Wrapper):
         
         if done:
             if info["flag_get"]:
-                reward += 10
+                reward += 20
             else: ## dead / time ran out
-                reward -= 5 ## 30
+                reward -= 5 ## 5
         
-        # if (self.ep_max > self.training_max):
-        #     print("training max exceeded")
-        #     self.training_max = self.ep_max
-        #     reward+=30
-        #self.reset_step_specifics
+        # if (self.curr_x > self.lifetime_max):
+        #     reward+=5
+        #     self.lifetime_max = self.curr_x
 
-
-        # if (info["x_pos"] > self.max_x and info["x_pos"] >=100): # reward agent for progressing through level
-        #     self.max_x = info["x_pos"]
-        #     #print("new max reached: {}".format(self.max_x))
-        #     reward+=2
-        # # else:
-        # #     if (info["x_pos"] < self.max_x):
-        # #         reward-=5
-        # if (self.max_x > self.ep_max and self.surpassed == False): # reward agent for improving upon previous episode
-        #     print("agent surpassed previous episode")
-        #     self.ep_max = self.max_x ## update prev ep max with current max
-        #     reward+=2.5
-        #     self.surpassed = True
-        # if done:
-        #     if info["flag_get"]:
-        #         reward += 100
-        #     else: ## dead / time ran out
-        #         reward -= 100 ## 30
-
-        # if (info["x_pos"] == self.prev_x): ## to dissuade agent from retracting / standing still - i.e. when facing a pipe / other object 
-        #     reward-=1
-        #     self.stationary_count+=1
-        # # else: ## progressed
-        # #     if info["x_pos"] > self.prev_x:
-        # #         if (self.stationary_count >40): # 50 actions per episode, if struggling for long (40) episodes, reward when correct action chosen
-        # #             print("reward allocated: stationary")
-        # #             reward+=10
-        
         
         # ## set prev_x to current
         # self.prev_x = info["x_pos"]
@@ -176,7 +133,7 @@ class GetFrame(Wrapper):
 def create_env(world,stage):
     env_name = "SuperMarioBros-{}-{}-v0".format(world,stage)
     env= gym_super_mario_bros.make(env_name)
-    env = JoypadSpace(env=env,actions=MOVEMENT_OPTIONS) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
+    env = JoypadSpace(env=env,actions=right_only) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
     env = GetReward(env)
     env = GetFrame(env)
-    return env, env.observation_space.shape[0], len(MOVEMENT_OPTIONS) 
+    return env, env.observation_space.shape[0], len(right_only) 

@@ -14,6 +14,7 @@ from src.SharedAdam import SharedAdam
 from right.train import train
 
 MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
+right_only = [['right'],['right','A'],['right','A','B']]
 
 
 def run_right (button_to_train):

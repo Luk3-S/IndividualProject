@@ -22,10 +22,10 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
     
     BUTTON_PRESSED = False
     MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
-
+    right_only = [['right'],['right','A'],['right','A','B']]
     no_steps = 100
     max_steps = 1600 ## max steps possible in 400 seconds
-    no_episodes = 1000
+    no_episodes =500# 1000
     if save:
         start_time = timeit.default_timer()
     env, num_states,num_actions = create_env(1,1)
@@ -51,7 +51,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
             if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
                 torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format(desktop_path+"\\trained_models",1,1))
-                torch.save(A3C_shared_model.state_dict(),"{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("right"),1,1))
+                torch.save(A3C_shared_model.state_dict(),"{}\\193A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("right"),1,1))
                 #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
                 
             #print("process {}. Episode{}".format(index, episode))
@@ -101,7 +101,9 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
             action = m.sample().item()
             
             #print(MOVEMENT_OPTIONS[action],MOVEMENT_OPTIONS[action][0]==button[0])
-            if (MOVEMENT_OPTIONS[action]==button or button[0] in MOVEMENT_OPTIONS[action]):
+            #if (MOVEMENT_OPTIONS[action]==button or button[0] in MOVEMENT_OPTIONS[action]):
+            if (right_only[action]==button): #or button[0] in right_only[action]):
+
             #     #print(MOVEMENT_OPTIONS[action]) ## check if the behaviour that we're training is chosen
                 BUTTON_PRESSED = True
             
@@ -117,7 +119,7 @@ def train (index, A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser
 
             #print("step: {}".format(step))
             if (BUTTON_PRESSED):
-                print(MOVEMENT_OPTIONS[action])
+                #print(MOVEMENT_OPTIONS[action])
                 #print("")
             ## only do the following if we have our button pressed? i.e only reward when button 
                 values.append(value)

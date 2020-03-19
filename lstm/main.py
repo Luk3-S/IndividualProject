@@ -8,7 +8,7 @@ from torch.distributions import Normal
 import os
 import torch
 from src.environment import create_env
-from a.actorcritic import Actor_Critic
+from lstm import Actor_Critic
 from src.convolutional_ae import CAE
 from src.SharedAdam import SharedAdam
 from train import train
@@ -33,7 +33,7 @@ def run_lstm ():
 
     print('Loading A3C parametets ...')
     try:
-        pretrained_dict = torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("B"),1,1))
+        pretrained_dict = torch.load("{}\\193A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("right_a_b"),1,1))
         model_dict = A3C_shared_model.state_dict()
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
         model_dict.update(pretrained_dict) 
