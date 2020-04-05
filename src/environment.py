@@ -1,126 +1,103 @@
 import gym_super_mario_bros
 from gym.spaces import Box
-from gym import Wrapper
+import gym
+from gym import Wrapper,ObservationWrapper,spaces
 from nes_py.wrappers import JoypadSpace
-import cv2
 import numpy as np
 import subprocess as sp
-
-MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
+import torchvision
+from gym.wrappers import FrameStack,LazyFrames
+from torchvision import transforms, utils
+import cv2
 right_only = [['right'],['right','A'],['right','A','B']]
-def process_frame(frame):
-    if frame is not None:
-        #print('Frame shape before convertion: {}'.format(frame.shape))
 
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-        #print('Frame shape between convertion: {}'.format(frame.shape))
-        frame = cv2.resize(frame, (84, 84))[None, :, :] / 255.
-        frame = frame.reshape(1,84,84)
-        #print('Frame shape after convertion: {}'.format(frame.shape))
-        return frame
+# inspiration taken from : https://github.com/openai/gym/blob/master/gym/wrappers/gray_scale_observation.py
+def convert_frame(frame):
+    if frame is not None:
+        frame = cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY) # convert colours to grayscale
+        return np.expand_dims(cv2.resize(frame,(84,84)),axis=0) / 255 # resize image and add additional column
+       
     else:
         return np.zeros((1, 84, 84))
 
 
-
-class GetReward(Wrapper):
+class RewardHandler(Wrapper):
     def __init__(self, env=None):
-        super(GetReward, self).__init__(env)
+        super(RewardHandler, self).__init__(env)
         self.observation_space = Box(low=0, high=255, shape=(1, 84, 84))
-        self.curr_score = 0
-        self.lifetime_max = 0 ## futherest x pos that mario has achieved in its lifetime
+        self.current_score = 0
+        self.lifetime_max_x = 0 ## futherest x pos that mario has achieved in its lifetime
         self.step_count = 0
-        self.ep_max = 0 ## currently episode prior's max
-        #self.surpassed = False
-        #self.ep_prev_x = 0
-        self.stationary_count = 0
-        self.curr_x = 0
-        self.timesCounted = 0
-        self.training_max = 0
+        self.episode_max = 0 ## currently episode prior's max
+        self.current_x = 0
+       
+        
 
     def step(self, action):
         #self.env.render()
         reward=0
         state, _, done, info = self.env.step(action)
 
-        state = process_frame(state)
-        reward += (info["score"] - self.curr_score) /10.
-        self.curr_score = info["score"]
+        state = convert_frame(state)
+        if (info["score"] == 100): ## 100 points awarded for killing a goomba, 200 for getting a coin. conly allocate rewards for
+            reward += (info["score"] - self.current_score) /10.
+        self.current_score = info["score"]
 
         reward += self.generate_reward(reward,info,done)
-        #if done:
-            # if info["flag_get"]:
-            #     reward += 100
-            # else: ## dead / time ran out
-            #     reward -= 35
-        return state, reward/10. , done, info # reward/ 10.
+        return state, reward/10. , done, info
 
 
     def generate_reward(self,reward,info,done):
-        self.timesCounted+=1
-        self.curr_x = info["x_pos"]
+        self.current_x = info["x_pos"]
         self.step_count+=1
 
         ## episode-specific rewards
-        if (self.curr_x > self.ep_max): ## if mario progresses during an episode, allocate reward and update the episode's max x pos
+        if (self.current_x > self.episode_max): ## if mario progresses during an episode, allocate reward and update the episode's max x pos
             reward+=1
-            self.stationary_count=0
-            self.ep_max = self.curr_x
+            self.episode_max = self.current_x
 
-        if (self.ep_max > self.lifetime_max): ## if episode surpasses lifetime x pos
+        if (self.episode_max > self.lifetime_max_x): ## if episode surpasses lifetime x pos
             reward+=1
-            self.lifetime_max = self.ep_max
+            self.lifetime_max_x = self.episode_max
         
         if done:
             if info["flag_get"]:
-                reward += 20
+                reward += 20 ## reward for reaching flag - this is low since 
             else: ## dead / time ran out
-                reward -= 5 ## 5
-        
-        # if (self.curr_x > self.lifetime_max):
-        #     reward+=5
-        #     self.lifetime_max = self.curr_x
-
-        
-        # ## set prev_x to current
-        # self.prev_x = info["x_pos"]
-        if (self.step_count ==500): ##
-        #     print("reset step specifics")
-            self.reset_step_specifics()
-        #print("times Counted: {}".format(self.timesCounted))
+                reward -=8 
+                
+           
+       
+        if (self.step_count ==500): ## idea: and !done -> incentivise this only if not dead (done = False)
+            print("Exceeded step count, resetting environment reward parameters")
+            self.reset_ep_specifics()
         return reward
-    def reset_step_specifics(self):
-        self.ep_max = 0
-        self.stationary_count = 0
-        #self.surpassed = False
+
+    def reset_ep_specifics(self): ## reset episode max only if 500 steps reached (reached end of episode)
+        self.episode_max = 0
         self.step_count = 0
     
     
     def reset(self): ## called when agent dies / runs out of steps 
-        self.curr_score = 0
-        self.lifetime_max = 0
+        self.current_score = 0
+        self.lifetime_max_x = 0
+        return convert_frame(self.env.reset())
 
-        print("full reset")
-        #print('Frame env reset: {}'.format(env.reset.shape))
-        return process_frame(self.env.reset())
-
-
-class GetFrame(Wrapper):
+#https://github.com/LecJackS/TP-Final-Procesos-Markovianos-para-el-Aprendizaje-Automatico-2019-1C/blob/32ae31a314f197afcad78ba6ee8ad60169868944/gym_pacman/src/env.py#
+# code inspired by above link and ammended by me
+class FrameHandler(Wrapper):
     def __init__(self, env):
-        super(GetFrame, self).__init__(env)
+        super(FrameHandler, self).__init__(env)
         self.observation_space = Box(low=0, high=255, shape=(4, 84, 84)) #4*3,84,84
 
     def step(self, action):
-        total_reward = 0
         states = []
         state, reward, done, info = self.env.step(action)
         for _ in range(4):
             if not done:
                 state, reward, done, info = self.env.step(action)
-                total_reward += reward
-                states.append(state)
-            else:
-                states.append(state)
+
+            states.append(state)
         states = np.concatenate(states, 0)[None, :, :, :]
         return states.astype(np.float32), reward, done, info
 
@@ -129,11 +106,9 @@ class GetFrame(Wrapper):
         states = np.concatenate([state for _ in range(4)], 0)[None, :, :, :]
         return states.astype(np.float32)
 
-
-def create_env(world,stage):
-    env_name = "SuperMarioBros-{}-{}-v0".format(world,stage)
-    env= gym_super_mario_bros.make(env_name)
-    env = JoypadSpace(env=env,actions=right_only) # joypad space wants actions input to be list of lists, hence above reformatting when passing a singular button in
-    env = GetReward(env)
-    env = GetFrame(env)
+def instantiate_environment():
+    env= gym_super_mario_bros.make("SuperMarioBros-1-1-v0")
+    env = JoypadSpace(env=env,actions=right_only) 
+    env = RewardHandler(env)
+    env = FrameHandler(env)
     return env, env.observation_space.shape[0], len(right_only) 

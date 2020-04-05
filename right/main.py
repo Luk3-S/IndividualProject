@@ -1,64 +1,56 @@
 import sys  
-laptop_path = "C:\\Users\\Luke\\Documents\\diss proj\\IndividualProject"
-desktop_path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
-sys.path.append(desktop_path)
+path = "C:\\Users\\UKGC-PC\\Documents\\metal-mario-master\\IndividualProject"
+sys.path.append(path)
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions import Normal
 import os
 import torch
-from src.environment import create_env
+from src.environment import instantiate_environment
 from right.actorcritic import Actor_Critic
 from src.convolutional_ae import CAE
-from src.SharedAdam import SharedAdam
 from right.train import train
+import torch.multiprocessing as mp
+import numpy as np
 
-MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
 right_only = [['right'],['right','A'],['right','A','B']]
 
+def right_main(button_to_train):
+    torch.manual_seed(123) 
+    np.random.seed(123)
+    _, num_states, num_actions = instantiate_environment()
+    
 
-def run_right (button_to_train):
-    torch.manual_seed(123)
-    #button = 'down'
-    env, num_states, num_actions = create_env(1,1)
+    test_name = "running right on its own"
+    
+    cae_shared = CAE().to(torch.device('cuda'))
+    a3c_shared = Actor_Critic(num_states,num_actions).to(torch.device('cuda'))
 
-    # print("num states: {}".format(num_states))
-    # print("num actions: {}".format(num_actions))
-    print("env: {}".format(env))
+    cae_shared.cuda()
+    a3c_shared.cuda()
 
-    CAE_shared_model = CAE()
-    A3C_shared_model = Actor_Critic(num_states,num_actions)
-
-    CAE_shared_model.share_memory()
-    A3C_shared_model.share_memory()
-
-    print("Beginning train process - no prior parameters to load.")
-    #print('Attempting to load A3C parametets ...')
-    # try:
-    #     pretrained_dict = torch.load("{}\\A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("right"),1,1))
-    #     model_dict = A3C_shared_model.state_dict()
-    #     pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-    #     model_dict.update(pretrained_dict) 
-    #     A3C_shared_model.load_state_dict(model_dict)
-    #     print("loaded parameters")
-    # except:
-    #     print("Failed to load parameters")
-
-
-    #print("A3C - shared")
-    #print(A3C_shared_model)
-    #print("num states: {} , num actions: {}".format(num_states,num_actions))
-
-
-    optimiser_cae = CAE_shared_model.createLossAndOptimiser(CAE_shared_model,0.001)
-    optimiser_a3c = SharedAdam(A3C_shared_model.parameters(),lr =0.001)
+    cae_shared.share_memory() 
+    a3c_shared.share_memory() 
 
     
-    train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True, button_to_train)
-# pos =-1
-# for button in MOVEMENT_OPTIONS:
-#     print(button)
-def right_main():
-    run_right(['right'])
-#     pos+=1
-right_main()
+    
+
+    
+    optimiser_a3c = optim.Adam(a3c_shared.parameters(),lr =0.001)
+
+    
+    # no previous parameters to load
+   
+
+    threads = []
+
+    for _ in range(0,4):
+        process = mp.Process(target=train, args = (optimiser_a3c,a3c_shared,cae_shared, button_to_train,500,test_name,0))
+        process.start()
+        threads.append(process)
+    
+    for thread in threads:
+        thread.join()
+
+
+right_main('right')

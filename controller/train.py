@@ -11,33 +11,34 @@ import gym
 import torch.multiprocessing as _mp
 from src.environment import instantiate_environment
 from src.convolutional_ae import CAE
-from controller.lstm import Actor_Critic
+from controller.controller_a3c import Actor_Critic
 from torch.distributions import Categorical
 from tensorboardX import SummaryWriter
 import timeit
+import numpy as np
+from torch.autograd import Variable
 right_only = [['right'],['A'],['right','A'],['right','A','B']]
 
 
-def train (A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser):
-    
-    #BUTTON_PRESSED = False
-    MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
+def train (A3C_optimiser, a3c_shared,CAE_shared_model,test_name,experiment_num):
+  
 
     no_steps = 100
-    max_steps = 1600 ## max steps possible in 400 seconds
-    no_episodes = 1000
-    test_name = "no_coin"
+    max_steps = 1600 
+    no_episodes = 2000
+    test_name = test_name
 
     start_time = timeit.default_timer()
     env, num_states,num_actions = instantiate_environment()
-    #env2 = gym.wrappers.FlattenDictWrapper(env,dict_keys=['observation','desired_goal'])
+    
 
 
     a3c_local_model = Actor_Critic(num_states,num_actions).cuda()
     cae_local_model = CAE().cuda()
     a3c_local_model.train()
 
-    torch.manual_seed(123)
+    torch.manual_seed(123)  
+    np.random.seed(123)
 
     state = torch.from_numpy(env.reset()).cuda()
 
@@ -47,23 +48,23 @@ def train (A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser):
     episode = 0
     done = True
     save = True
+
+    f = open(path+"\\{}\\ep_log.txt".format("controller"),"a")
+    f.write("==================================================== \n {} \n ==========================================\n".format(test_name))
+    f.write("Episode, loss,rewards,xpos,status\n")
+    f.close()
     while True:
         print("episode: {}".format(episode))
         if save == True:
             if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
                 print("saved")
-                torch.save(CAE_shared_model.state_dict(),"{}\\CAE_super_mario_bros_{}_{}_enc1".format(path+"\\trained_models",1,1))
-                torch.save(A3C_shared_model.state_dict(),"{}\\controller\\{}_controller_A3C_SMB_enc2".format(path,test_name))
-                
-                #C:\Users\UKGC-PC\Documents\Level 4 Project\trained_models
-                
-            #print("process {}. Episode{}".format(index, episode))
+                torch.save(a3c_shared.state_dict(),"{}\\controller\\{}_controller_A3C_enc2".format(path,test_name))
 
 
-        a3c_local_model.load_state_dict(A3C_shared_model.state_dict())
+        a3c_local_model.load_state_dict(a3c_shared.state_dict())
 
         try:
-            cae_local_model.load_state_dict(torch.load("{}\\CAE_super_mario_bros_1_1_enc1".format(path+"\\trained_models"),map_location='cpu'))
+            cae_local_model.load_state_dict(torch.load("{}\\cae_model_enc2".format(path+"\\trained_cae"),map_location='cpu'))
         except:
             print("no file found")
         cae_local_model.eval()
@@ -106,14 +107,6 @@ def train (A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser):
             m = Categorical(policy)
             action = m.sample().item()
 
-            #print("logits, policy, button pressed : {}".format(right_only[action]))
-           # print(logits)
-            #print(policy)
-            
-            #print(MOVEMENT_OPTIONS[action],MOVEMENT_OPTIONS[action][0]==button[0])
-            #if (MOVEMENT_OPTIONS[action]==button or button[0] in MOVEMENT_OPTIONS[action]):
-                #print(MOVEMENT_OPTIONS[action]) ## check if the behaviour that we're training is chosen
-                #BUTTON_PRESSED = True
             
             state,reward,done,info = env.step(action)
             state = torch.from_numpy(state).cuda()      
@@ -125,9 +118,6 @@ def train (A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser):
                 step = 0
                 state = torch.from_numpy(env.reset()).cuda()
 
-            #print("step: {}".format(step))
-            #if (BUTTON_PRESSED):
-                #print("")
             ## only do the following if we have our button pressed? i.e only reward when button 
             values.append(value)
             log_policies.append(log_policy[0,action])
@@ -148,35 +138,33 @@ def train (A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser):
 
             gae = torch.zeros((1,1),dtype=torch.float).cuda()
 
-            actor_loss = 0
-            critic_loss = 0
-            entropy_loss = 0
-            next_value = R
-        #print("step count: {}".format(step))
-        # if done: 
-        #     #print("episode finished 2")
-        #     break
         
-        #if (len(values)>0):## check if we've actually pressed said button, and if so, then apply rewards etc.
-        for value, log_policy, reward, entropy in list(zip(values,log_policies,rewards,entropies))[::-1]:
-            #print("v:{}, lp:{}, r:{}, e:{} ".format(value,log_policy,reward,entropy))
-            gae = gae * 0.9 * 1 # gamma = 0.1 , tau = 0.2
-            gae = gae + reward + 0.9 * next_value.detach() - value.detach()
-            next_value = value
-            actor_loss = actor_loss + log_policy * gae
-            R = R * 0.9 + reward
-            critic_loss = critic_loss + (R-value) **2 /2
-            entropy_loss = entropy_loss + entropy
+       
+        policy_loss, value_loss = 0,0
+   
+        advantage_estimator2 = gae
+        previous_value = R
+       
+        
+
+
+        for i in range(len(rewards))[::-1]:
             
-       # print(rewards)
-        #print("episode {} cumulative rewards: {}".format(episode,sum(rewards)))
-       # print("a: {}, c: {}, e: {}".format(actor_loss,critic_loss,entropy_loss))
-        total_loss = -actor_loss + critic_loss - 0.01 * entropy_loss # beta = 0.3
-            
-            #print("index: {}".format(index))
-        #print("total_loss: {}".format(total_loss))
-            #print("episode: {}".format(episode))
-        #print("\n")
+            # compute value loss: VL: L = sum(R - V(s))^2
+            R = 0.9 * R + rewards[i]
+            advantage = R - values[i]
+            value_loss = value_loss + (advantage**2)/2
+
+            ## advantage function estimate: reward[i] + gamma (value(st+1) - value(st))
+            theta = rewards[i] + (0.9 * previous_value - values[i])
+            advantage_estimator2 = advantage_estimator2 * 0.9  + theta
+        
+            # comput policy loss: -log(pi(s)) * A(s) - beta*H(pi)
+            policy_loss = policy_loss - log_policies[i] *Variable(advantage_estimator2).type(torch.cuda.FloatTensor) - 0.01 * entropies[i]
+            previous_value = values[i]
+
+        total_loss = policy_loss +  value_loss
+    
 
         status=""
         if (done):
@@ -188,16 +176,14 @@ def train (A3C_optimiser, A3C_shared_model,CAE_shared_model,CAE_optimiser):
             status = "alive"
 
         f = open(path+"\\{}\\ep_log.txt".format("controller"),"a")
-        f.write("Episode: {} | Total Loss: {} | Cumulative Rewards: {} | Position: {} | Status: {} \n".format(episode,round(total_loss.item(),3),round(sum(rewards),3),info["x_pos"],status))
+        f.write("{},{},{},{},{},{} \n".format(experiment_num,episode,round(total_loss.item(),3),round(sum(rewards),3),info["x_pos"],status))
 
         f.close()
         A3C_optimiser.zero_grad()
-            # if total_loss == 0:
-            #      total_loss = torch.tensor([[0.0]],requires_grad=True)
         total_loss.backward(retain_graph=True)
-            #update model
 
-        for local_param, global_param in zip(a3c_local_model.parameters(),A3C_shared_model.parameters()):
+
+        for local_param, global_param in zip(a3c_local_model.parameters(),a3c_shared.parameters()):
             if global_param.grad is not None:
                 break
             global_param._grad = local_param.grad

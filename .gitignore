@@ -16,3 +16,8 @@ summary/
 
 # ignore weights
 **/A3C
+
+## ignore log files
+*.txt
+
+## 

@@ -8,64 +8,50 @@ from torch.distributions import Normal
 import os
 import torch
 from src.environment import instantiate_environment
-from right_a.actorcritic import Actor_Critic
+from rightA.actorcritic import Actor_Critic
 from src.convolutional_ae import CAE
-from src.SharedAdam import SharedAdam
-from right_a.train import train
+from rightA.train import train
 import torch.multiprocessing as mp
+import numpy as np
 MOVEMENT_OPTIONS = [['right'], ['A'], ['left'], ['down'], ['up'],['B'],['right','A'],['right','A','B']]
 right_only = [['right'],['right','A'],['right','A','B']]
 
-def run_right_a (button_to_train):
-    torch.manual_seed(123)
-    #button = 'down'
-    env, num_states, num_actions = instantiate_environment(1,1)
+def right_a_main(button_to_train):
+    torch.manual_seed(123) 
+    np.random.seed(123)
+    _, num_states, num_actions = instantiate_environment()
+    
 
-    # print("num states: {}".format(num_states))
-    # print("num actions: {}".format(num_actions))
-    print("env: {}".format(env))
+    test_name = "running rightA on its own"
+    
+    cae_shared = CAE().to(torch.device('cuda'))
+    a3c_shared = Actor_Critic(num_states,num_actions).to(torch.device('cuda'))
 
-    CAE_shared_model = CAE()
-    A3C_shared_model = Actor_Critic(num_states,num_actions)
+    cae_shared.cuda()
+    a3c_shared.cuda()
 
-    CAE_shared_model.share_memory().cuda().to(torch.device('cuda'))
-    A3C_shared_model.share_memory().cuda().to(torch.device('cuda'))
-
-    print('Attempting to load A3C parameters : right ...')
-    try:
-        pretrained_dict = torch.load("{}\\500A3C_super_mario_bros_{}_{}_enc".format(desktop_path+"\\{}".format("right"),1,1))#b
-        model_dict = A3C_shared_model.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-        model_dict.update(pretrained_dict) 
-        A3C_shared_model.load_state_dict(model_dict)
-        print("loaded parameters")
-    except:
-        print("Failed to load parameters")
-
-
-    #print("A3C - shared")
-    #print(A3C_shared_model)
-    #print("num states: {} , num actions: {}".format(num_states,num_actions))
-
-
-    optimiser_cae = CAE_shared_model.createLossAndOptimiser(CAE_shared_model,0.001)
-    optimiser_a3c = SharedAdam(A3C_shared_model.parameters(),lr =0.001)
+    cae_shared.share_memory() 
+    a3c_shared.share_memory() 
 
     
+    
+
+    
+    optimiser_a3c = optim.Adam(a3c_shared.parameters(),lr =0.001)
+
+    
+    # no previous parameters to load
+   
+
     threads = []
 
     for _ in range(0,4):
-        process = mp.Process(target=train, args = (optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae, button_to_train))
+        process = mp.Process(target=train, args = (optimiser_a3c,a3c_shared,cae_shared, button_to_train,500,test_name,0))
         process.start()
         threads.append(process)
     
     for thread in threads:
         thread.join()
 
-    #train(1, optimiser_a3c,A3C_shared_model,CAE_shared_model,optimiser_cae,True, button_to_train)
-# pos =-1
-# for button in MOVEMENT_OPTIONS:
-#     print(button)
-if __name__ == '__main__':  
-#def right_main():
-    run_right_a(['right','A'])
+
+right_a_main(['right','A'])

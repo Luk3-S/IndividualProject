@@ -13,25 +13,26 @@ import torchvision
 from torchvision import transforms, utils
 import cv2
 import os
+
+
 class DatasetMario(Dataset):
     def __init__(self, file_path, csv_name, transform_in=None):
-        #print("file path: {}".format(file_path))
-        self.data = pd.read_csv(csv_name) # file_path+"/"+csv_name
+      
+        self.data = pd.read_csv(csv_name) 
         self._path = file_path
-        self._path = self._path.replace("/","")
-        #print(" path: {}".format(self._path))
-        #print("file path: {}".format(file_path))
+        
         self.transform_in = transform_in
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
-        # Load state and image from Mario FCEUX (after a dataset has been created with the Lua script and FM2)
+      
+        ## reformat input paths to work with windows directories
         self.data.iloc[index,0]= self.data.iloc[index,0].replace("/","\\")
         self.data.iloc[index,0]=self.data.iloc[index,0].replace(".","",1)
-        image_file = self._path + self.data.iloc[index, 0]#.values.astype(np.uint8).reshape((1, 28, 28))
-        #print("data iloc: {}".format(self.data.iloc[index, 0]))
+        image_file = self._path + self.data.iloc[index, 0]
+      
         self.data.iloc[index, 1] = self.data.iloc[index, 1].replace("/","\\")
         self.data.iloc[index, 1] = self.data.iloc[index, 1].replace(".","",1)
 
@@ -217,7 +218,7 @@ if __name__ == '__main__':
     # ToTensor demo
     # ***********************
     transform2apply = transforms.Compose([transforms.Resize((128,128)),
-                                          #transforms.Grayscale(),
+                                          transforms.Grayscale(),
                                           transforms.ToTensor()])#, transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     transformed_dataset = DatasetMario(file_path="./", csv_name="allitems.csv", transform_in=transform2apply)
 
