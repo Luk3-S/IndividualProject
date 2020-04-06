@@ -12,7 +12,7 @@ from src.environment import instantiate_environment
 from src.convolutional_ae import CAE
 from right.actorcritic import Actor_Critic
 from torch.distributions import Categorical
-from tensorboardX import SummaryWriter
+
 import timeit
 import numpy as np
 from torch.autograd import Variable
@@ -202,10 +202,10 @@ def train (a3c_optimiser, a3c_shared,CAE_shared_model,button,eps,test_name,exper
             total_loss.backward(retain_graph=True)
             #update model
             BUTTON_PRESSED = False
-            for local_param, global_param in zip(a3c_local_model.parameters(),a3c_shared.parameters()):
-                if global_param.grad is not None:
+            for local, shared in zip(a3c_local_model.parameters(),a3c_shared.parameters()):
+                if shared.grad is not None:
                     break
-                global_param._grad = local_param.grad
+                shared._grad = local.grad
 
             a3c_optimiser.step()
         episode +=1

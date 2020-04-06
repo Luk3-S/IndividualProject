@@ -13,7 +13,7 @@ from src.environment import instantiate_environment
 from src.convolutional_ae import CAE
 from controller.controller_a3c import Actor_Critic
 from torch.distributions import Categorical
-from tensorboardX import SummaryWriter
+
 import timeit
 import numpy as np
 from torch.autograd import Variable
@@ -56,7 +56,7 @@ def train (A3C_optimiser, a3c_shared,CAE_shared_model,test_name,experiment_num):
     while True:
         print("episode: {}".format(episode))
         if save == True:
-            if episode %100 ==0 : # 500 episode > 0 and episode % 100 ==0 
+            if episode %100 ==0 : 
                 print("saved")
                 torch.save(a3c_shared.state_dict(),"{}\\controller\\{}_controller_A3C_enc2".format(path,test_name))
 
@@ -85,8 +85,7 @@ def train (A3C_optimiser, a3c_shared,CAE_shared_model,test_name,experiment_num):
         rewards=[]
         entropies=[]
 
-        for _ in range(no_steps): #500
-            #print("step: {}".format(step))
+        for _ in range(no_steps): 
             step +=1
 
             for param in cae_local_model.parameters():
@@ -183,10 +182,10 @@ def train (A3C_optimiser, a3c_shared,CAE_shared_model,test_name,experiment_num):
         total_loss.backward(retain_graph=True)
 
 
-        for local_param, global_param in zip(a3c_local_model.parameters(),a3c_shared.parameters()):
-            if global_param.grad is not None:
+        for local, shared in zip(a3c_local_model.parameters(),a3c_shared.parameters()):
+            if shared.grad is not None:
                 break
-            global_param._grad = local_param.grad
+            shared._grad = local.grad
 
         A3C_optimiser.step()
         episode +=1
